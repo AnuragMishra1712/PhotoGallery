@@ -1,0 +1,119 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Voice-Controlled-Web-Album
+
+Resources:
+  IAMRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: "/"
+      RoleName: "apitos3new"
+      AssumeRolePolicyDocument: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"apigateway.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}"
+      MaxSessionDuration: 3600
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+      Description: ""
+
+  IAMRole2:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: "/service-role/"
+      RoleName: "index-photos-role-new"
+      AssumeRolePolicyDocument: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}"
+      MaxSessionDuration: 3600
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+        - "arn:aws:iam::aws:policy/AmazonRekognitionFullAccess"
+        - "arn:aws:iam::aws:policy/AmazonOpenSearchServiceFullAccess"
+
+  IAMRole3:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: "/service-role/"
+      RoleName: "lambda2-role-new"
+      AssumeRolePolicyDocument: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}"
+      MaxSessionDuration: 3600
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+        - "arn:aws:iam::aws:policy/AmazonLexFullAccess"
+        - "arn:aws:iam::aws:policy/AmazonOpenSearchServiceFullAccess"
+  
+  S3BUCKET1:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+        BucketName: photo-app-frontend
+        AccessControl: PublicRead
+        WebsiteConfiguration:
+          IndexDocument: index.html
+
+  S3BUCKET2:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+        BucketName: photo-app-photo-bucket
+        AccessControl: Private
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: false
+          BlockPublicPolicy: false
+          IgnorePublicAcls: false
+          RestrictPublicBuckets: false
+
+  APIGATEWAYRESTAPI:
+    Type: 'AWS::ApiGateway::RestApi'
+    Properties:
+      Name: 'AI Photo Search New New'
+      Description: 'AI Photo Search application, built during the Cloud and Big Data course at NYU.'
+      ApiKeySourceType: 'HEADER'
+      BinaryMediaTypes:
+        - '*/*'
+      EndpointConfiguration:
+        Types:
+          - 'REGIONAL'
+  
+  LambdaFunction:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Description: "LF1"
+      FunctionName: "index-photo-new"
+      Handler: "lambda_function.lambda_handler"
+      Architectures:
+        - "x86_64"
+      Code:
+        S3Bucket: "b2bucket2"
+        S3Key: "lf1.zip"
+      MemorySize: 128
+      Role: !Sub "arn:aws:iam::658960012993:role/service-role/LF2-role-268a23n8"
+      Runtime: "python3.9"
+      Timeout: 20
+      TracingConfig:
+        Mode: "PassThrough"
+  
+  LambdaFunction2:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Description: "LF2"
+      FunctionName: "lambda2"
+      Handler: "lambda_function.lambda_handler"
+      Architectures:
+        - "x86_64"
+      Code:
+        S3Bucket: "b2bucket2"
+        S3Key: "lf2.zip"
+      MemorySize: 128
+      Role: !Sub "arn:aws:iam::658960012993:role/service-role/LF2-role-268a23n8"
+      Runtime: "python3.9"
+      Timeout: 20
+      TracingConfig:
+        Mode: "PassThrough"
+
+  OpenSearchInstance:
+    Type: AWS::OpenSearchService::Domain
+    Properties:
+      DomainName: "photo-new"
+      EngineVersion: "Elasticsearch_7.10"
+      ClusterConfig:
+        InstanceType: t3.small.search
+        InstanceCount: 1
+      EBSOptions:
+        EBSEnabled: true
+        VolumeType: gp3
+        VolumeSize: 10
