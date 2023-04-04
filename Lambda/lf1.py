@@ -19,8 +19,7 @@ def lambda_handler(event, context):
     bucket = event['Records'][0]['s3']['bucket']['name']
     print(bucket)
     key = urllib.parse.unquote_plus(event['Records'][0]['s3']['object']['key'], encoding='utf-8')
-    # bucket = "b2photostore"
-    # key = "bird-img-1.jpeg"
+   
 
     labels = []
 
